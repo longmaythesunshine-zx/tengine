@@ -336,13 +336,6 @@ ngx_xquic_dispatcher_process_packet(ngx_connection_t *c, ngx_xquic_recv_packet_t
         return;
     }
 
-    /* check QUIC magic bit */
-    if (!NGX_XQUIC_CHECK_MAGIC_BIT(packet->buf)) {
-        ngx_log_error(NGX_LOG_WARN, c->log, 0,
-                      "|xquic|invalid packet head|");
-        return;
-    }
-
     /* check healthcheck */
     if (packet->len >= sizeof(NGX_XQUIC_HEALTH_CHECK)
         && ngx_strncmp(packet->buf, NGX_XQUIC_HEALTH_CHECK, sizeof(NGX_XQUIC_HEALTH_CHECK)-1) == 0) 
@@ -359,6 +352,13 @@ ngx_xquic_dispatcher_process_packet(ngx_connection_t *c, ngx_xquic_recv_packet_t
         ngx_log_debug(NGX_LOG_DEBUG, c->log, 0,
                       "|xquic|health check, req/rsp mode|");
         sendto(c->fd, NGX_XQUIC_HEALTH_CHECK_RSP, sizeof(NGX_XQUIC_HEALTH_CHECK_RSP)-1, 0, &packet->sockaddr, packet->socklen);
+        return;
+    }
+
+    /* check QUIC magic bit */
+    if (!NGX_XQUIC_CHECK_MAGIC_BIT(packet->buf)) {
+        ngx_log_error(NGX_LOG_WARN, c->log, 0,
+                      "|xquic|invalid packet head|");
         return;
     }
     
@@ -490,9 +490,6 @@ ngx_xquic_cmp_sockaddr(struct sockaddr *sa1, struct sockaddr *sa2)
     return NGX_OK;
 }
 
-
-
-
 void
 ngx_xquic_recv_from_intercom(ngx_xquic_recv_packet_t *packet)
 {
@@ -594,13 +591,6 @@ ngx_xquic_dispatcher_process(ngx_connection_t *c, const ngx_udpv2_packet_t *upkt
 
     qmcf = (ngx_http_xquic_main_conf_t *)(c->data);
 
-    /* check QUIC magic bit */
-    if (!NGX_XQUIC_CHECK_MAGIC_BIT(upkt->pkt_payload)) {
-        ngx_log_error(NGX_LOG_WARN, c->log, 0,
-                      "|xquic|invalid packet head|");
-        return;
-    }
-
     /* check healthcheck */
     if (upkt->pkt_sz >= sizeof(NGX_XQUIC_HEALTH_CHECK)
         && ngx_strncmp(upkt->pkt_payload, NGX_XQUIC_HEALTH_CHECK, sizeof(NGX_XQUIC_HEALTH_CHECK)-1) == 0)
@@ -620,6 +610,13 @@ ngx_xquic_dispatcher_process(ngx_connection_t *c, const ngx_udpv2_packet_t *upkt
         return;
     }
 
+    /* check QUIC magic bit */
+    if (!NGX_XQUIC_CHECK_MAGIC_BIT(upkt->pkt_payload)) {
+        ngx_log_error(NGX_LOG_WARN, c->log, 0,
+                      "|xquic|invalid packet head|");
+        return;
+    }
+    
 #if (NGX_DEBUG)
     {
         ngx_str_t  addr, addr2;
